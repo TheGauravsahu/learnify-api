@@ -15,18 +15,19 @@ export const DashboardTypeDefs = gql`
   }
 
   type ClassStudentCount {
-    classId: String!
+    classId: ID!
+    className: String!
     count: Int!
   }
 
   type DashboardOverview {
     counts: DashboardCounts!
     genderStats: GenderStats!
-    classWiseStudents: [ClassStudentCount!]!
     latestNotices: [Notice!]!
   }
 
   extend type Query {
     adminDashboard: DashboardOverview!
+    classWiseStudentCount: [ClassStudentCount!]!
   }
 `;

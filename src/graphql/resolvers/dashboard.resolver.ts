@@ -9,5 +9,9 @@ export const dashboardResolver = {
       requireRoles(ctx, [UserRoles.ADMIN]);
       return dashboardService.getAdminDashboard();
     },
+    classWiseStudentCount: async (_: any, __: any, ctx: GraphQLContext) => {
+      requireRoles(ctx, [UserRoles.ADMIN]);
+      return dashboardService.getClassWiseStudentCount();
+    },
   },
 };
