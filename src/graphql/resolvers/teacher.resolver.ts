@@ -1,0 +1,45 @@
+import { UserRoles } from "../../models/user.model";
+import { TeacherInput, teacherService } from "../../services/teacher.service";
+import { GraphQLContext } from "../context";
+import { requireRoles } from "../guards/requireRoles";
+
+export const teacherResolver = {
+  Query: {
+    teachers: async (_: any, __: any, ctx: GraphQLContext) => {
+      requireRoles(ctx, [UserRoles.ADMIN]);
+      return teacherService.getAllTeachers();
+    },
+    teacher: async (_: any, args: { id: string }, ctx: GraphQLContext) => {
+      requireRoles(ctx, [UserRoles.ADMIN]);
+      return teacherService.getTeacher(args.id);
+    },
+  },
+  Mutation: {
+    createTeacher: async (
+      _: any,
+      args: { input: TeacherInput },
+      ctx: GraphQLContext
+    ) => {
+      requireRoles(ctx, [UserRoles.ADMIN]);
+      return teacherService.createTeacher(args.input);
+    },
+
+    updateTeacher: async (
+      _: any,
+      args: { id: string; input: TeacherInput },
+      ctx: GraphQLContext
+    ) => {
+      requireRoles(ctx, [UserRoles.ADMIN]);
+      return teacherService.updateTeacher(args.id, args.input);
+    },
+
+    deleteTeacher: async (
+      _: any,
+      args: { id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRoles(ctx, [UserRoles.ADMIN]);
+      return teacherService.deleteTeacher(args.id);
+    },
+  },
+};
