@@ -3,18 +3,17 @@ import { studentModel } from "../models/student.model";
 export interface StudentInput {
   user: string;
   class: string;
-  section: string;
   rollNumber: number;
   gender: string;
 }
 
 class StudentService {
   async getAllStudents() {
-    return studentModel.find().populate("user");
+    return studentModel.find().populate("user class");
   }
 
   async getStudent(id: string) {
-    return studentModel.findById(id).populate("user");
+    return studentModel.findById(id).populate("user class");
   }
 
   async createStudent(input: StudentInput) {

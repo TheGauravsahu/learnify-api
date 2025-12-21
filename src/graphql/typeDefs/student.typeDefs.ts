@@ -4,8 +4,7 @@ export const StudentTypeDefs = gql`
   type Student {
     _id: ID!
     user: User!
-    class: String!
-    section: String!
+    class: Class!
     rollNumber: Int!
     gender: String!
     createdAt: String!
@@ -15,7 +14,6 @@ export const StudentTypeDefs = gql`
   input StudentInput {
     user: ID
     class: String
-    section: String
     rollNumber: Int
     gender: String
   }

@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 
 export interface IStudent extends mongoose.Document {
   user: mongoose.Types.ObjectId;
-  class: string;
-  section: string;
+  class: mongoose.Types.ObjectId;
   rollNumber: number;
   gender: "MALE" | "FEMALE";
 }
@@ -15,10 +14,20 @@ const studentSchema = new mongoose.Schema<IStudent>(
       ref: "users",
       required: true,
     },
-    class: { type: String, required: true },
-    section: { type: String, required: true },
-    rollNumber: { type: Number, required: true },
-    gender: { type: String, default: "MALE", required: false },
+    class: {
+      type: mongoose.Types.ObjectId,
+      required: true,
+      ref: "classes",
+    },
+    rollNumber: {
+      type: Number,
+      required: true,
+    },
+    gender: {
+      type: String,
+      default: "MALE",
+      required: false,
+    },
   },
   { timestamps: true }
 );

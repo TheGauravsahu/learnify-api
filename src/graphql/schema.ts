@@ -14,6 +14,8 @@ import { AttendanceTypeDefs } from "./typeDefs/attendance.typeDefs";
 import { attendanceResolver } from "./resolvers/attendance.resolver";
 import { DashboardTypeDefs } from "./typeDefs/dashboard.typeDefs";
 import { dashboardResolver } from "./resolvers/dashboard.resolver";
+import { ClassTypeDefs } from "./typeDefs/class.typeDefs";
+import { classResolver } from "./resolvers/class.resolver";
 
 export const typeDefs = [
   GlobalTypeDef,
@@ -23,7 +25,8 @@ export const typeDefs = [
   NoticeTypeDefs,
   HomeworkTypeDefs,
   AttendanceTypeDefs,
-  DashboardTypeDefs
+  DashboardTypeDefs,
+  ClassTypeDefs,
 ];
 
 
@@ -34,5 +37,6 @@ export const resolvers = merge([
   noticeResolver,
   homeworkResolver,
   attendanceResolver,
-  dashboardResolver
+  dashboardResolver,
+  classResolver
 ]);

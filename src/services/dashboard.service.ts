@@ -14,7 +14,7 @@ class DashboardService {
     const genderAggregation = await studentModel.aggregate([
       {
         $group: {
-          _id: "gender",
+          _id: "$gender",
           count: { $sum: 1 },
         },
       },
