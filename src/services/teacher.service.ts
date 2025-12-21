@@ -7,8 +7,31 @@ export interface TeacherInput {
 }
 
 class TeacherService {
-  async getAllTeachers() {
-    return await teacherModel.find().populate("user").sort({ createdAt: -1 });
+  async getAllTeachers({ page, limit, sortBy, sortOrder }: any) {
+    const skip = (page - 1) * limit;
+
+    const sortMap: Record<string, string> = {
+      name: "user.name",
+      subject: "subject",
+      experience: "experience",
+      createdAt: "createdAt",
+    };
+
+    const teachers = await teacherModel
+      .find()
+      .populate("user")
+      .sort({ [sortMap[sortBy]]: sortOrder === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await teacherModel.countDocuments();
+
+    return {
+      data: teachers,
+      total,
+      page,
+      limit,
+    };
   }
 
   async getTeacher(id: string) {

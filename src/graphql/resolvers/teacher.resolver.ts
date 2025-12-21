@@ -5,9 +5,13 @@ import { requireRoles } from "../guards/requireRoles";
 
 export const teacherResolver = {
   Query: {
-    teachers: async (_: any, __: any, ctx: GraphQLContext) => {
+    teachers: async (
+      _: any,
+      { page = 1, limit = 10, sortBy, sortOrder }: any,
+      ctx: GraphQLContext
+    ) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
-      return teacherService.getAllTeachers();
+      return teacherService.getAllTeachers({ page, limit, sortBy, sortOrder });
     },
     teacher: async (_: any, args: { id: string }, ctx: GraphQLContext) => {
       requireRoles(ctx, [UserRoles.ADMIN]);

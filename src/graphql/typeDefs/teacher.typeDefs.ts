@@ -6,22 +6,48 @@ export const TeacherTypeDefs = gql`
     user: User!
     subject: String!
     experience: Int!
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type TeacherListResponse {
+    data: [Teacher!]!
+    total: Int!
+    page: Int!
+    limit: Int!
+  }
+
+  enum TeacherSortField {
+    name
+    experience
+    subject
+    createdAt
+  }
+
+  enum SortOrder {
+    asc
+    desc
   }
 
   input TeacherInput {
-    userId: ID
+    user: ID
     subject: String
     experience: Int
   }
 
   extend type Query {
-    teachers: [Teacher!]!
+    teachers(
+      page: Int = 1
+      limit: Int = 10
+      sortBy: TeacherSortField = createdAt
+      sortOrder: SortOrder = desc
+    ): TeacherListResponse!
     teacher(id: ID!): Teacher
   }
 
   extend type Mutation {
     createTeacher(input: TeacherInput!): Teacher!
-    updateTeacher(id:ID!, input: TeacherInput!): Teacher!
+    updateTeacher(id: ID!, input: TeacherInput!): Teacher!
     deleteTeacher(id: ID!): Boolean!
   }
 `;
