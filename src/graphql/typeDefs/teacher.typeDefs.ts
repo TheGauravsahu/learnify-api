@@ -41,6 +41,7 @@ export const TeacherTypeDefs = gql`
       limit: Int = 10
       sortBy: TeacherSortField = createdAt
       sortOrder: SortOrder = desc
+      search: String
     ): TeacherListResponse!
     teacher(id: ID!): Teacher
   }

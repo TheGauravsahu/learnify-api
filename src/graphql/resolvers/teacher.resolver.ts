@@ -7,11 +7,11 @@ export const teacherResolver = {
   Query: {
     teachers: async (
       _: any,
-      { page = 1, limit = 10, sortBy, sortOrder }: any,
+      { page = 1, limit = 10, sortBy, sortOrder, search }: any,
       ctx: GraphQLContext
     ) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
-      return teacherService.getAllTeachers({ page, limit, sortBy, sortOrder });
+      return teacherService.getAllTeachers({ page, limit, sortBy, sortOrder,search });
     },
     teacher: async (_: any, args: { id: string }, ctx: GraphQLContext) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
