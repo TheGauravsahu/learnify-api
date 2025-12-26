@@ -7,6 +7,7 @@ export interface RegisterInput {
   email: string;
   password: string;
   role?: UserRoles;
+  sendWelcomeEmail?: boolean;
 }
 
 export interface LoginInput {

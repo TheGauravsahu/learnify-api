@@ -27,6 +27,7 @@ export const AuthTypeDefs = gql`
     email: String
     password: String
     role: Role
+    sendWelcomeEmail: Boolean
   }
 
   input LoginInput {

@@ -1,7 +1,9 @@
 import { teacherModel } from "../models/teacher.model";
+import { UserRoles } from "../models/user.model";
+import { authService, RegisterInput } from "./auth.service";
 
 export interface TeacherInput {
-  user: string;
+  register: RegisterInput;
   subject: string;
   experience: number;
 }
@@ -49,11 +51,7 @@ class TeacherService {
       { $limit: limit },
     ]);
 
-    console.log(teachers);
-
     const filteredTeachers = teachers.filter((t) => t.user);
-
-    console.log(filteredTeachers);
 
     const total = await teacherModel.countDocuments(filter);
 
@@ -70,7 +68,16 @@ class TeacherService {
   }
 
   async createTeacher(input: TeacherInput) {
-    return await teacherModel.create(input);
+    const { register, subject, experience } = input;
+
+    const { user } = await authService.registerUser({
+      name: register.name,
+      email: register.email,
+      password: register.password,
+      sendWelcomeEmail: register.sendWelcomeEmail,
+      role: UserRoles.TEACHER,
+    });
+    return await teacherModel.create({ subject, experience, user: user._id });
   }
 
   async updateTeacher(id: string, input: TeacherInput) {

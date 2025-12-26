@@ -30,9 +30,10 @@ export const TeacherTypeDefs = gql`
   }
 
   input TeacherInput {
-    user: ID
+    register: RegisterInput
     subject: String
     experience: Int
+    sendWelcomeEmail: Boolean
   }
 
   extend type Query {
