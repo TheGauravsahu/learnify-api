@@ -8,15 +8,25 @@ export interface TeacherInput {
   experience: number;
 }
 
+interface GetTeachersParams {
+  page: number;
+  limit: number;
+  sortBy?: "name" | "subject" | "experience" | "createdAt";
+  sortOrder?: "asc" | "desc";
+  search?: string;
+}
+
 class TeacherService {
-  async getAllTeachers({ page, limit, sortBy, sortOrder, search }: any) {
+  async getAllTeachers({
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    search = "",
+  }: GetTeachersParams) {
+    page = Math.max(1, page);
+    limit = Math.max(1, limit);
     const skip = (page - 1) * limit;
-
-    const filter: any = {};
-
-    if (search) {
-      filter.$or = [{ subject: { $regex: search, $options: "i" } }];
-    }
 
     const sortMap: Record<string, string> = {
       name: "user.name",
@@ -25,7 +35,21 @@ class TeacherService {
       createdAt: "createdAt",
     };
 
-    const teachers = await teacherModel.aggregate([
+    const sortField = sortMap[sortBy] || "createdAt";
+    const order = sortOrder === "asc" ? 1 : -1;
+
+    const matchStage = search
+      ? {
+          $or: [
+            { subject: { $regex: search, $options: "i" } },
+            { "user.name": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    // ---------- aggregation ----------
+    const result = await teacherModel.aggregate([
       {
         $lookup: {
           from: "users",
@@ -35,29 +59,22 @@ class TeacherService {
         },
       },
       { $unwind: "$user" },
+      { $match: matchStage },
       {
-        $match: search
-          ? {
-              $or: [
-                { subject: { $regex: search, $options: "i" } },
-                { "user.name": { $regex: search, $options: "i" } },
-                { "user.email": { $regex: search, $options: "i" } },
-              ],
-            }
-          : {},
+        $facet: {
+          data: [
+            { $sort: { [sortField]: order } },
+            { $skip: skip },
+            { $limit: limit },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
       },
-      { $sort: { [sortMap[sortBy]]: sortOrder === "asc" ? 1 : -1 } },
-      { $skip: skip },
-      { $limit: limit },
     ]);
 
-    const filteredTeachers = teachers.filter((t) => t.user);
-
-    const total = await teacherModel.countDocuments(filter);
-
     return {
-      data: filteredTeachers,
-      total,
+      data: result[0].data,
+      total: result[0].totalCount[0]?.count || 0,
       page,
       limit,
     };
