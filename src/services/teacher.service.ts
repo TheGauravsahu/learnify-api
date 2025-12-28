@@ -98,12 +98,16 @@ class TeacherService {
   }
 
   async updateTeacher(id: string, input: TeacherInput) {
-    const teacher = await teacherModel.findByIdAndUpdate(id, input, {
+    const { register, ...teacherData } = input;
+    const teacher = await teacherModel.findByIdAndUpdate(id, teacherData, {
       new: true,
+      runValidators: true,
     });
     if (!teacher) {
       throw new Error("Teacher not found");
     }
+
+    await authService.updateUser(teacher.user.toString(), register);
     return teacher;
   }
 

@@ -49,6 +49,24 @@ class AuthService {
     const token = signToken({ userId: user._id, role: user.role });
     return { token, user };
   }
+
+  async updateUser(id: string, input: Partial<RegisterInput>) {
+    try {
+      const user = await userModel.findByIdAndUpdate(id, input, {
+        new: true,
+        runValidators: true,
+      });
+      if (!user) {
+        throw new Error("User not found");
+      }
+      return user;
+    } catch (err) {
+      if (err.code === 11000) {
+        throw new Error("Email already exists");
+      }
+      throw err;
+    }
+  }
 }
 
 export const authService = new AuthService();
