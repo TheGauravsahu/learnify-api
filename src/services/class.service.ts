@@ -15,7 +15,14 @@ class ClassService {
   async getAllClasses() {
     return await classModel
       .find()
-      .populate("classTeacher")
+      .populate({
+        path: "classTeacher",
+        populate: {
+          path: "user",
+          model: "users",
+          select: "name email role",
+        },
+      })
       .sort({ createdAt: -1 });
   }
 
