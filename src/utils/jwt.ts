@@ -14,3 +14,9 @@ export const signRefreshToken = (payload: object) => {
 export const verifyAccessToken = (token: string) => {
   return jwt.verify(token, JWT_SECRET);
 };
+
+export const signTokens = (payload: object) => {
+  const accessToken = signAccessToken(payload);
+  const refreshToken = signRefreshToken(payload);
+  return { accessToken, refreshToken };
+};

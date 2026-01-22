@@ -1,5 +1,10 @@
 import { UserRoles } from "../../models/user.model";
-import { TeacherInput, teacherService } from "../../services/teacher.service";
+import { teacherService } from "../../services/teacher.service";
+import { GetModelParams } from "../../utils";
+import {
+  CreateTeacherInput,
+  UpdateTeacherInput,
+} from "../../validators/teacher.validator";
 import { GraphQLContext } from "../context";
 import { requireRoles } from "../guards/requireRoles";
 
@@ -7,11 +12,17 @@ export const teacherResolver = {
   Query: {
     teachers: async (
       _: any,
-      { page = 1, limit = 10, sortBy, sortOrder, search }: any,
-      ctx: GraphQLContext
+      { page = 1, limit = 10, sortBy, sortOrder, search }: GetModelParams,
+      ctx: GraphQLContext,
     ) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
-      return teacherService.getAllTeachers({ page, limit, sortBy, sortOrder,search });
+      return teacherService.getAllTeachers({
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+        search,
+      });
     },
     teacher: async (_: any, args: { id: string }, ctx: GraphQLContext) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
@@ -21,8 +32,8 @@ export const teacherResolver = {
   Mutation: {
     createTeacher: async (
       _: any,
-      args: { input: TeacherInput },
-      ctx: GraphQLContext
+      args: { input: CreateTeacherInput },
+      ctx: GraphQLContext,
     ) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
       return teacherService.createTeacher(args.input);
@@ -30,8 +41,8 @@ export const teacherResolver = {
 
     updateTeacher: async (
       _: any,
-      args: { id: string; input: TeacherInput },
-      ctx: GraphQLContext
+      args: { id: string; input: UpdateTeacherInput },
+      ctx: GraphQLContext,
     ) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
       return teacherService.updateTeacher(args.id, args.input);
@@ -40,7 +51,7 @@ export const teacherResolver = {
     deleteTeacher: async (
       _: any,
       args: { id: string },
-      ctx: GraphQLContext
+      ctx: GraphQLContext,
     ) => {
       requireRoles(ctx, [UserRoles.ADMIN]);
       return teacherService.deleteTeacher(args.id);

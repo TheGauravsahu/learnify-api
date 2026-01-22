@@ -1,48 +1,30 @@
-import { userModel, UserRoles } from "../models/user.model";
-import { signAccessToken, signRefreshToken } from "../utils/jwt";
+import { userModel } from "../models/user.model";
+import { signTokens } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
+import { LoginInput, RegisterInput } from "../validators/auth.validators";
 import { sessionService } from "./session.service";
 
-export interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
-  role?: UserRoles;
-  sendWelcomeEmail?: boolean;
-}
-
-export interface LoginInput {
-  email: string;
-  password: string;
-}
-
 class AuthService {
-  async registerUser({ name, email, password, role }: RegisterInput) {
+  async registerUser({ email, password, role }: RegisterInput) {
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       throw new Error("User already exists.");
     }
-
     const hashedPasword = await hashPassword(password);
+    // create user and session
     const user = await userModel.create({
-      name,
       email,
       password: hashedPasword,
       role,
     });
-
     const session = await sessionService.createSession({
       user: user._id,
       deviceId: crypto.randomUUID(),
       deviceInfo: "registration",
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
-    const accessToken = signAccessToken({
-      userId: user._id,
-      role: user.role,
-      sessionId: session._id,
-    });
-    const refreshToken = signRefreshToken({
+
+    const { accessToken, refreshToken } = signTokens({
       userId: user._id,
       role: user.role,
       sessionId: session._id,
@@ -56,7 +38,7 @@ class AuthService {
   async loginUser(
     { email, password }: LoginInput,
     deviceInfo?: string,
-    ipAddress?: string
+    ipAddress?: string,
   ) {
     const user = await userModel.findOne({ email });
     if (!user) {
@@ -76,12 +58,7 @@ class AuthService {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
-    const accessToken = signAccessToken({
-      userId: user._id,
-      role: user.role,
-      sessionId: session._id,
-    });
-    const refreshToken = signRefreshToken({
+    const { accessToken, refreshToken } = signTokens({
       userId: user._id,
       role: user.role,
       sessionId: session._id,
@@ -116,17 +93,13 @@ class AuthService {
 
   async refreshToken(refreshToken: string) {
     const session = await sessionService.getSessionByRefreshToken(refreshToken);
-    const newAccessToken = signAccessToken({
-      userId: session.user._id,
-      role: session.user.role,
-      sessionId: session._id,
-    });
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      signTokens({
+        userId: session.user._id,
+        role: session.user.role,
+        sessionId: session._id,
+      });
 
-    const newRefreshToken = signRefreshToken({
-      userId: session.user._id,
-      role: session.user.role,
-      sessionId: session._id,
-    });
     session.refreshToken = newRefreshToken;
     await session.save();
 
@@ -135,6 +108,13 @@ class AuthService {
       refreshToken: newRefreshToken,
       user: session.user,
     };
+  }
+
+  async deleteUser(id: string) {
+    await Promise.all([
+      userModel.findByIdAndDelete(id),
+      sessionService.terminateSessionByUserId(id),
+    ]);
   }
 }
 

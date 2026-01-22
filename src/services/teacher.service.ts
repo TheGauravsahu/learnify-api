@@ -1,118 +1,96 @@
-import { teacherModel } from "../models/teacher.model";
+import { teacherModel, ITeacher } from "../models/teacher.model";
 import { UserRoles } from "../models/user.model";
-import { authService, RegisterInput } from "./auth.service";
+import { GetModelParams, toObjectId } from "../utils";
+import {
+  CreateTeacherInput,
+  UpdateTeacherInput,
+} from "../validators/teacher.validator";
+import { authService } from "./auth.service";
+import { BaseService } from "./base.service";
 
-export interface TeacherInput {
-  register: RegisterInput;
-  subject: string;
-  experience: number;
-}
+class TeacherService extends BaseService<ITeacher> {
+  constructor() {
+    super(teacherModel);
+  }
 
-interface GetTeachersParams {
-  page: number;
-  limit: number;
-  sortBy?: "name" | "subject" | "experience" | "createdAt";
-  sortOrder?: "asc" | "desc";
-  search?: string;
-}
-
-class TeacherService {
   async getAllTeachers({
     page = 1,
     limit = 10,
     sortBy = "createdAt",
     sortOrder = "desc",
     search = "",
-  }: GetTeachersParams) {
-    page = Math.max(1, page);
-    limit = Math.max(1, limit);
+  }: GetModelParams) {
     const skip = (page - 1) * limit;
-
-    const sortMap: Record<string, string> = {
-      name: "user.name",
-      subject: "subject",
-      experience: "experience",
-      createdAt: "createdAt",
-    };
-
-    const sortField = sortMap[sortBy] || "createdAt";
-    const order = sortOrder === "asc" ? 1 : -1;
-
-    const matchStage = search
+    const match = search
       ? {
-          $or: [
-            { subject: { $regex: search, $options: "i" } },
-            { "user.name": { $regex: search, $options: "i" } },
-            { "user.email": { $regex: search, $options: "i" } },
-          ],
+          name: { $regex: search, $options: "i" },
         }
       : {};
 
-    // ---------- aggregation ----------
-    const result = await teacherModel.aggregate([
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      { $match: matchStage },
-      {
-        $facet: {
-          data: [
-            { $sort: { [sortField]: order } },
-            { $skip: skip },
-            { $limit: limit },
-          ],
-          totalCount: [{ $count: "count" }],
-        },
-      },
+    const [data, total] = await Promise.all([
+      teacherModel
+        .find(match)
+        .populate("user subjects classes")
+        .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
+        .skip(skip)
+        .limit(limit),
+      teacherModel.countDocuments(match),
     ]);
 
-    return {
-      data: result[0].data,
-      total: result[0].totalCount[0]?.count || 0,
-      page,
-      limit,
-    };
+    return { data, total, page, limit };
   }
 
   async getTeacher(id: string) {
-    return await teacherModel.findById(id).populate("user");
+    const teacher = await this.model
+      .findById(id)
+      .populate("user subjects classes");
+
+    if (!teacher) throw new Error("Teacher not found");
+    return teacher;
   }
 
-  async createTeacher(input: TeacherInput) {
-    const { register, subject, experience } = input;
-
+  async createTeacher(input: CreateTeacherInput) {
+    const { register, subjects, classes, ...rest } = input;
     const { user } = await authService.registerUser({
-      name: register.name,
-      email: register.email,
-      password: register.password,
-      sendWelcomeEmail: register.sendWelcomeEmail,
+      ...register,
       role: UserRoles.TEACHER,
     });
-    return await teacherModel.create({ subject, experience, user: user._id });
+    return this.create({
+      ...rest,
+      user: user._id,
+      subjects: subjects.map((id) => toObjectId(id)),
+      classes: classes?.map((id) => toObjectId(id)),
+    });
   }
 
-  async updateTeacher(id: string, input: TeacherInput) {
-    const { register, ...teacherData } = input;
-    const teacher = await teacherModel.findByIdAndUpdate(id, teacherData, {
-      new: true,
-      runValidators: true,
-    });
-    if (!teacher) {
-      throw new Error("Teacher not found");
+  async updateTeacher(id: string, input: UpdateTeacherInput) {
+    const { register, subjects, classes, ...rest } = input;
+    const updateData: Partial<ITeacher> = {
+      ...rest,
+    };
+    if (subjects) {
+      updateData.subjects = subjects.map((id) => toObjectId(id));
+    }
+    if (classes) {
+      updateData.classes = classes.map((id) => toObjectId(id));
     }
 
-    await authService.updateUser(teacher.user.toString(), register);
+    const teacher = await this.update(id, updateData);
+    if (!teacher) throw new Error("Teacher not found");
+
+    if (register) {
+      await authService.updateUser(teacher.user.toString(), register);
+    }
     return teacher;
   }
 
   async deleteTeacher(id: string) {
-    await teacherModel.findByIdAndDelete(id);
+    const teacher = await this.getById(id);
+    if (!teacher) throw new Error("Teacher not found");
+    await Promise.all([
+      authService.deleteUser(teacher.user.toString()),
+      this.delete(id),
+    ]);
     return true;
   }
 }

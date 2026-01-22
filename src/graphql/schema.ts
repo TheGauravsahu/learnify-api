@@ -16,6 +16,7 @@ import { DashboardTypeDefs } from "./typeDefs/dashboard.typeDefs";
 import { dashboardResolver } from "./resolvers/dashboard.resolver";
 import { ClassTypeDefs } from "./typeDefs/class.typeDefs";
 import { classResolver } from "./resolvers/class.resolver";
+import { SubjectTypeDefs } from "./typeDefs/subject.typeDefs";
 
 export const typeDefs = [
   GlobalTypeDef,
@@ -27,6 +28,7 @@ export const typeDefs = [
   AttendanceTypeDefs,
   DashboardTypeDefs,
   ClassTypeDefs,
+  SubjectTypeDefs,
 ];
 
 

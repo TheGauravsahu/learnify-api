@@ -78,12 +78,8 @@ class SessionService {
     );
   }
 
-  async terminateSessionById(id: string) {
-    return sessionModel.findByIdAndUpdate(
-      id,
-      { isRevoked: true },
-      { new: true }
-    );
+  async terminateSessionByUserId(userId: string) {
+    return sessionModel.updateOne({ user: userId }, { isRevoked: true });
   }
 
   async terminateAllUserSessions(userId: string) {

@@ -1,10 +1,22 @@
 import gql from "graphql-tag";
 
 export const TeacherTypeDefs = gql`
+  enum TeacherStatus {
+    ACTIVE
+    INACTIVE
+    SUSPENDED
+  }
+
   type Teacher {
     _id: ID!
     user: User!
-    subject: String!
+    subjects: [Subject!]!
+    classes: [Class!]!
+    name: String!
+    phone: String!
+    address: String!
+    status: TeacherStatus!
+    qualification: String!
     experience: Int!
     createdAt: String!
     updatedAt: String!
@@ -17,13 +29,6 @@ export const TeacherTypeDefs = gql`
     limit: Int!
   }
 
-  enum TeacherSortField {
-    name
-    experience
-    subject
-    createdAt
-  }
-
   enum SortOrder {
     asc
     desc
@@ -31,15 +36,20 @@ export const TeacherTypeDefs = gql`
 
   input TeacherInput {
     register: RegisterInput
-    subject: String
-    experience: Int
+    subjects: [ID!]!
+    classes: [ID!]
+    name: String!
+    phone: String
+    address: String
+    qualification: String!
+    experience: Int!
   }
 
   extend type Query {
     teachers(
       page: Int = 1
       limit: Int = 10
-      sortBy: TeacherSortField = createdAt
+      sortBy: String
       sortOrder: SortOrder = desc
       search: String
     ): TeacherListResponse!

@@ -22,7 +22,8 @@
     "graphql-tag": "^2.12.6",
     "jsonwebtoken": "^9.0.3",
     "lodash": "^4.17.21",
-    "mongoose": "^9.0.2"
+    "mongoose": "^9.0.2",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
